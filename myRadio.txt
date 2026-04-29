@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MyRadio YouTube</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;600&display=swap" rel="stylesheet">
+
+<style>
+body {
+  margin: 0;
+  font-family: 'Montserrat', sans-serif;
+  height: 100vh;
+  background: linear-gradient(270deg, #1e3c72, #2a5298, #0f2027);
+  background-size: 600% 600%;
+  animation: gradientMove 15s ease infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@keyframes gradientMove {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.container {
+  width: 360px;
+  padding: 20px;
+  border-radius: 20px;
+  backdrop-filter: blur(15px);
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: white;
+  text-align: center;
+}
+
+#freqDisplay {
+  font-size: 26px;
+}
+
+input[type=range] {
+  width: 100%;
+}
+
+.rds {
+  margin-top: 10px;
+  background: black;
+  color: #00ff88;
+  padding: 10px;
+  border-radius: 10px;
+  font-family: monospace;
+}
+
+iframe {
+  margin-top: 15px;
+  width: 100%;
+  height: 200px;
+  border-radius: 10px;
+  border: none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h1>📻 MyRadio</h1>
+
+  <div id="freqDisplay">87.0 FM</div>
+  <input type="range" min="87" max="108" step="0.1" id="tuner">
+
+  <div id="status">No Signal</div>
+  <div class="rds" id="rds">NO SIGNAL</div>
+
+  <iframe id="player"></iframe>
+</div>
+
+<script>
+// 🔁 Convert normal YouTube link → embed
+function convertToEmbed(url) {
+  let videoId = "";
+
+  if (url.includes("watch?v=")) {
+    videoId = url.split("watch?v=")[1].split("&")[0];
+  } else if (url.includes("youtu.be/")) {
+    videoId = url.split("youtu.be/")[1];
+  }
+
+  return "https://www.youtube.com/embed/" + videoId;
+}
+
+// ---------------- STATIONS (USE NORMAL YT LINKS) ----------------
+const stations = [
+  {
+    freq: 90.5,
+    name: "Lofi FM",
+    rds: "LOFI FM • CHILL •",
+    url: "https://www.youtube.com/live/ZTqt3CYehuE?si=uomTdIhotGzZTAsS"
+  },
+  {
+    freq: 95.5,
+    name: "Pop FM",
+    rds: "POP FM • HITS •",
+    url: "https://www.youtube.com/watch?v=kJQP7kiw5Fk"
+  },
+  {
+    freq: 102.3,
+    name: "Rock FM",
+    rds: "ROCK FM • LIVE •",
+    url: "https://www.youtube.com/watch?v=ktvTqknDobU"
+  }
+];
+
+// ---------------- ELEMENTS ----------------
+const tuner = document.getElementById("tuner");
+const freqDisplay = document.getElementById("freqDisplay");
+const status = document.getElementById("status");
+const rds = document.getElementById("rds");
+const player = document.getElementById("player");
+
+let currentStation = null;
+
+// ---------------- TUNER ----------------
+tuner.addEventListener("input", () => {
+  const freq = parseFloat(tuner.value);
+  freqDisplay.innerText = freq.toFixed(1) + " FM";
+
+  let found = null;
+  let minDiff = 999;
+
+  stations.forEach(st => {
+    let diff = Math.abs(st.freq - freq);
+    if (diff < minDiff) {
+      minDiff = diff;
+      found = st;
+    }
+  });
+
+  if (minDiff < 0.3) {
+    tune(found);
+  } else {
+    noSignal();
+  }
+});
+
+// ---------------- TUNE ----------------
+function tune(station) {
+  if (currentStation === station) return;
+
+  currentStation = station;
+
+  status.innerText = "Tuned to " + station.name;
+  rds.innerText = station.rds;
+
+  const embedUrl = convertToEmbed(station.url);
+  player.src = embedUrl + "?autoplay=1";
+}
+
+// ---------------- NO SIGNAL ----------------
+function noSignal() {
+  currentStation = null;
+  player.src = "";
+
+  status.innerText = "No Signal";
+  rds.innerText = "NO SIGNAL";
+}
+</script>
+
+</body>
+</html>
